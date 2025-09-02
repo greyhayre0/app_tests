@@ -22,7 +22,7 @@
     <div id="resumesView" class="view">
         <h2>Мои резюме</h2>
         <button onclick="showCreateResume()">Добавить резюме</button>
-        <!--<button onclick="logout()">Выйти</button>-->
+        <button onclick="logout()">Выйти</button>
         <div id="resumesList"></div>
     </div>
 
@@ -158,11 +158,11 @@
             showView('resumes');
         }
         
-        /*function logout() {
+        function logout() {
             localStorage.removeItem('token');
             token = null;
             showView('login');
-        }*/
+        }
     </script>
 </body>
 </html>
