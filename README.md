@@ -1,4 +1,4 @@
-1. Полный способ.
+# Полный способ.
 > [!CAUTION]
 > Все команды нужно выполнять из корня проекта.
 
@@ -15,7 +15,7 @@
 ### Выполни команду
 - 'docker-compose up --build'
 
-2. Быстрый старт.
+# Быстрый старт.
 ### Установите Docker и Docker Compose или Docker.desktop.
 - <https://docs.docker.com/compose/install/>
 ### В корне выполни команду
