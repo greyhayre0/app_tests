@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Резюме</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .view { display: none; }
+        input, textarea { display: block; width: 100%; margin: 10px 0; padding: 8px; }
+        button { padding: 8px 16px; margin: 5px; }
+        .resume { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div id="loginView" class="view">
+        <h2>Мастер резюме</h2>
+        <input type="email" id="email" placeholder="Электронная почта">
+        <input type="password" id="password" placeholder="Пароль">
+        <button onclick="login()">Войти</button>
+        <button onclick="register()">Зарегистрироваться</button>
+    </div>
+
+    <div id="resumesView" class="view">
+        <h2>Мои резюме</h2>
+        <button onclick="showCreateResume()">Добавить резюме</button>
+        <!--<button onclick="logout()">Выйти</button>-->
+        <div id="resumesList"></div>
+    </div>
+
+    <div id="createResumeView" class="view">
+        <h2>Создать резюме</h2>
+        <input type="text" id="resumeTitle" placeholder="title">
+        <textarea id="resumeContent" placeholder="content" rows="6"></textarea>
+        <button onclick="createResume()">Создать</button>
+        <button onclick="showResumes()">Отмена</button>
+    </div>
+
+    <div id="resumeDetailView" class="view">
+        <h2 id="detailTitle"></h2>
+        <p id="detailContent"></p>
+        <button onclick="improveResume()">Улучшить</button>
+        <button onclick="showResumes()">Назад к списку</button>
+        <div id="improvedResult"></div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        let currentResumeId = null;
+
+        if (token) showView('resumes'); else showView('login');
+
+        function showView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            document.getElementById(viewName + 'View').style.display = 'block';
+            if (viewName === 'resumes') loadResumes();
+        }
+
+        async function apiCall(endpoint, options = {}) {
+            const url = endpoint + '?token=' + token;
+            const response = await fetch(url, {
+                headers: {'Content-Type': 'application/json'},
+                ...options
+            });
+            return response.json();
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, password})
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                token = data.access_token;
+                localStorage.setItem('token', token);
+                showView('resumes');
+            } else {
+                alert('Неверная почта или пароль');
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            await fetch('/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, password})
+            });
+            
+            alert('Регистрация успешна. Теперь войдите.');
+        }
+
+        async function loadResumes() {
+            const resumes = await apiCall('/resumes');
+            const list = document.getElementById('resumesList');
+            list.innerHTML = '';
+            
+            resumes.forEach(resume => {
+                list.innerHTML += `
+                    <div class="resume">
+                        <h3>${resume.title}</h3>
+                        <p>${resume.content.substring(0, 100)}...</p>
+                        <button onclick="showResumeDetail(${resume.id})">Просмотреть</button>
+                        <button onclick="deleteResume(${resume.id})">Удалить</button>
+                    </div>
+                `;
+            });
+        }
+
+        function showCreateResume() {
+            showView('createResume');
+        }
+
+        async function createResume() {
+            const title = document.getElementById('resumeTitle').value;
+            const content = document.getElementById('resumeContent').value;
+            
+            await apiCall('/resumes', {
+                method: 'POST',
+                body: JSON.stringify({title, content})
+            });
+            
+            showView('resumes');
+        }
+
+        async function showResumeDetail(resumeId) {
+            const resume = await apiCall(`/resumes/${resumeId}`);
+            document.getElementById('detailTitle').textContent = resume.title;
+            document.getElementById('detailContent').textContent = resume.content;
+            currentResumeId = resumeId;
+            showView('resumeDetail');
+        }
+
+        async function improveResume() {
+            const result = await apiCall(`/resumes/${currentResumeId}/improve`, {
+                method: 'POST'
+            });
+            
+            document.getElementById('improvedResult').innerHTML = `
+                <p><strong>Улучшенная версия:</strong> ${result.improved_content}</p>
+            `;
+        }
+
+        async function deleteResume(resumeId) {
+            if (confirm('Удалить это резюме?')) {
+                await apiCall(`/resumes/${resumeId}`, {method: 'DELETE'});
+                loadResumes();
+            }
+        }
+
+        function showResumes() {
+            showView('resumes');
+        }
+        
+        /*function logout() {
+            localStorage.removeItem('token');
+            token = null;
+            showView('login');
+        }*/
+    </script>
+</body>
+</html>
