@@ -24,3 +24,7 @@
 
 * Фронтэнд адрес <http://localhost:8000>
 * API <http://localhost:8000/docs>
+* Хост пример <https://app-tests-1.onrender.com/>
+
+> [!CAUTION]
+> По умолчанию версия для локального запуска. При необходимости зайди в database.py и раскометируй деплой. Где SQLALCHEMY_DATABASE_URL прячет твои контакты на сервере.
